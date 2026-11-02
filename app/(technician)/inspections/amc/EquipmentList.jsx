@@ -19,6 +19,7 @@ import {
 import { ExpandMore } from "@mui/icons-material";
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { isNotOperational } from "@/lib/equipmentStatus";
 
 /**
  * @param {{ equipment: Array<{
@@ -144,6 +145,7 @@ export default function EquipmentList({
   //filtering though the equipments to see whether the
   //submissions table has a entry with the matching equipment id
   const pendingEquipment = filteredEquipment.filter((item) => {
+    if (isNotOperational(item.status)) return false;
     if (item.next_amc_date)
       return item.next_amc_date <= today || !completedIds.has(item.id);
     return !completedIds.has(item.id);

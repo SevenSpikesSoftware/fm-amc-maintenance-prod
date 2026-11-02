@@ -75,37 +75,41 @@ export async function getInspectionReportData(supabase) {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const equipmentRows = (equipment ?? [])
-    .filter((item) => !isNotOperational(item.status))
-    .map((item) => {
-      const history = historyByEquipment.get(item.id) ?? [];
-      const maintenanceHistory =
-        maintenanceHistoryByEquipment.get(item.id) ?? [];
-      const latest = history[0] ?? null;
-      return {
-        ...item,
-        history,
-        maintenanceHistory,
-        latest,
-        scheduleStatus: !item.next_amc_date
-          ? "unscheduled"
-          : latest &&
-              latest.form_status === "completed" &&
-              latest.inspection_date >= item.next_amc_date
-            ? "completed"
-            : item.next_amc_date < today
-              ? "overdue"
-              : "pending",
-      };
-    });
+  const equipmentRows = (equipment ?? []).map((item) => {
+    const history = historyByEquipment.get(item.id) ?? [];
+    const maintenanceHistory = maintenanceHistoryByEquipment.get(item.id) ?? [];
+    const latest = history[0] ?? null;
+    return {
+      ...item,
+      history,
+      maintenanceHistory,
+      latest,
+      scheduleStatus: !item.next_amc_date
+        ? "unscheduled"
+        : latest &&
+            latest.form_status === "completed" &&
+            latest.inspection_date >= item.next_amc_date
+          ? "completed"
+          : item.next_amc_date < today
+            ? "overdue"
+            : "pending",
+    };
+  });
 
   return {
     equipment: equipmentRows,
     frequencies: frequencies ?? [],
     occurrences: occurrences ?? [],
     completed: submissions ?? [],
-    pending: equipmentRows.filter((item) => item.scheduleStatus === "pending"),
-    overdue: equipmentRows.filter((item) => item.scheduleStatus === "overdue"),
+    pending: equipmentRows.filter(
+      (item) =>
+        item.scheduleStatus === "pending" && !isNotOperational(item.status),
+    ),
+    overdue: equipmentRows.filter(
+      (item) =>
+        item.scheduleStatus === "overdue" && !isNotOperational(item.status),
+    ),
+
     nok: (submissions ?? []).filter((submission) =>
       (submission.form_responses ?? []).some(
         (response) => response.result === "N_OK",

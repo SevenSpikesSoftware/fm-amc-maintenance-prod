@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import EquipmentList from "./EquipmentList";
 import LogoutButton from "@/features/auth/components/LogoutButton";
 import Link from "next/link";
-import { isNotOperational } from "@/lib/equipmentStatus";
+// import { isNotOperational } from "@/lib/equipmentStatus";
 
 export default async function InspectionsPage() {
   const supabase = await createClient();
@@ -30,9 +30,9 @@ export default async function InspectionsPage() {
       .select("id,site_code,site_name")
       .order("site_code"),
   ]);
-  const operationalEquipment = (equipment ?? []).filter(
-    (item) => !isNotOperational(item.status),
-  );
+  // const operationalEquipment = (equipment ?? []).filter(
+  //   (item) => !isNotOperational(item.status),
+  // );
   const latestByEquipment = new Map();
   for (const row of submissions ?? []) {
     if (!latestByEquipment.has(row.equipment_id)) {
@@ -103,7 +103,7 @@ export default async function InspectionsPage() {
       </Stack>
       <Divider sx={{ mb: 3 }} />
       <EquipmentList
-        equipment={operationalEquipment}
+        equipment={equipment}
         equipmentTypes={equipmentTypes}
         completedIds={completedIds}
         cancelledDates={cancelledDates}
