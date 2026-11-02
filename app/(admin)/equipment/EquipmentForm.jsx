@@ -53,6 +53,9 @@ export default function EquipmentForm({
   const isFireExtinguisher =
     selectedType?.name?.trim().toLowerCase() === "fire extinguisher" ||
     selectedType?.code?.trim().toUpperCase() === "FE";
+  const hasCapacityType = ["FET", "FP&WT"].includes(
+    selectedType?.code?.trim().toUpperCase(),
+  );
   const nextAmcDate =
     values.amc_date && selectedFrequency?.interval_days
       ? (() => {
@@ -161,6 +164,13 @@ export default function EquipmentForm({
         value={values.name}
         onChange={(event) => update("name", event.target.value)}
       />
+      {hasCapacityType && (
+        <TextField
+          label="Capacity/Type"
+          value={values.capacity_type ?? ""}
+          onChange={(event) => update("capacity_type", event.target.value)}
+        />
+      )}
       <TextField
         required
         select

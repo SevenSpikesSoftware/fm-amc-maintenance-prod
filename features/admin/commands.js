@@ -88,6 +88,7 @@ function equipmentInput(input) {
     amc_date: amcDate,
     refill_date_co2: input.refill_date_co2 || null,
     refill_date_dcp: input.refill_date_dcp || null,
+    capacity_type: String(input.capacity_type ?? "").trim() || null,
   };
 }
 
