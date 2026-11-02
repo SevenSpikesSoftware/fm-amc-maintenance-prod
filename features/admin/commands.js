@@ -86,6 +86,8 @@ function equipmentInput(input) {
     status: toPascalDisplay(input.status, "Equipment status"),
     amc_frequency: toPascalDisplay(input.amc_frequency, "AMC frequency"),
     amc_date: amcDate,
+    refill_date_co2: input.refill_date_co2 || null,
+    refill_date_dcp: input.refill_date_dcp || null,
   };
 }
 
@@ -210,13 +212,14 @@ export async function deleteLocation(id) {
   const supabase = await requireAdmin();
   const { error } = await supabase.from("locations").delete().eq("id", id);
   if (error) {
-    throw new Error(
-      error.code === "23503"
-        ? "This location is still in use by existing assets or movement history and cannot be deleted."
-        : error.message,
-    );
+    return {
+      error: error.code === "23503"
+        ? "This location cannot be deleted because it is linked to assets or movement history."
+        : "Could not delete this location. Please try again.",
+    };
   }
   revalidatePath("/locations");
+  return { error: null };
 }
 export async function createEquipmentType(input) {
   const supabase = await requireAdmin();
