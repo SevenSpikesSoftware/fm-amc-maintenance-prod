@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { createClient } from "@/lib/supabase/client";
 
-export default function ImageUploadField({ onChange }) {
+export default function ImageUploadField({ label, onChange }) {
   const fileInputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -59,19 +59,24 @@ export default function ImageUploadField({ onChange }) {
         hidden
         onChange={handleFileChange}
       />
+      {label && (
+        <Typography variant="body2" sx={{ mb: 1 }}>
+          {label}
+        </Typography>
+      )}
       {previewUrl ? (
-        <Box>
+        <Box sx={{ textAlign: "left" }}>
           <img
             src={previewUrl}
             alt="uploaded"
-            style={{ maxWidth: "100%", maxHeight: 200 }}
+            style={{ maxWidth: "100%", maxHeight: 200, display: "block" }}
           />
-          {label && (
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              {label}
-            </Typography>
-          )}
-          <Button size="small" onClick={handleClear}>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={handleClear}
+            sx={{ mt: 1 }}
+          >
             Remove
           </Button>
         </Box>
