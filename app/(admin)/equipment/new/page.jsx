@@ -65,6 +65,7 @@ export default async function NewEquipmentPage() {
           next_amc_date: "",
           refill_date_co2: "",
           refill_date_dcp: "",
+          capacity_type: "",
         }}
         {...lookups}
         submitLabel="Add Asset"
