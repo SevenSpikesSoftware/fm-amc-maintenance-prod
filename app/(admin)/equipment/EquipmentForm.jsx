@@ -47,9 +47,12 @@ export default function EquipmentForm({
   const selectedFrequency = frequencies.find(
     (item) => item.code === values.amc_frequency,
   );
-  const selectedType = equipmentTypes.find((item) => item.id === values.equipment_type_id);
-  const isFireExtinguisher = selectedType?.name?.trim().toLowerCase() === "fire extinguisher"
-    || selectedType?.code?.trim().toUpperCase() === "FE";
+  const selectedType = equipmentTypes.find(
+    (item) => item.id === values.equipment_type_id,
+  );
+  const isFireExtinguisher =
+    selectedType?.name?.trim().toLowerCase() === "fire extinguisher" ||
+    selectedType?.code?.trim().toUpperCase() === "FE";
   const nextAmcDate =
     values.amc_date && selectedFrequency?.interval_days
       ? (() => {
@@ -58,7 +61,19 @@ export default function EquipmentForm({
           return date.toISOString().slice(0, 10);
         })()
       : values.next_amc_date || "";
-
+  const byParentStatus = new Map();
+  for (const status of statuses) {
+    const key = status.parent_id ?? "null";
+    if (!byParentStatus.has(key)) byParentStatus.set(key, []);
+    byParentStatus.get(key).push(status);
+  }
+  const orderedStatuses = [];
+  for (const topLevel of byParentStatus.get("null") ?? []) {
+    orderedStatuses.push({ ...topLevel, depth: 0 });
+    for (const child of byParentStatus.get(topLevel.id) ?? []) {
+      orderedStatuses.push({ ...child, depth: 1 });
+    }
+  }
   async function handleTypeCodeBlur() {
     if (values.id) return; // don't recalculate when editing existing equipment
     const code = values.equipment_type_code?.trim();
@@ -184,9 +199,13 @@ export default function EquipmentForm({
         value={values.status}
         onChange={(event) => update("status", event.target.value)}
       >
-        {statuses.map((status) => (
-          <MenuItem key={status.code} value={status.code}>
-            {status.label}
+        {orderedStatuses.map((status) => (
+          <MenuItem
+            key={status.code}
+            value={status.code}
+            sx={{ pl: 2 + status.depth * 2 }}
+          >
+            {status.depth > 0 ? `└ ${status.label}` : status.label}
           </MenuItem>
         ))}
       </TextField>
@@ -234,7 +253,10 @@ export default function EquipmentForm({
             type="date"
             label="Expire Date CO2"
             value={expiryDate(values.refill_date_co2)}
-            slotProps={{ input: { readOnly: true }, inputLabel: { shrink: true } }}
+            slotProps={{
+              input: { readOnly: true },
+              inputLabel: { shrink: true },
+            }}
           />
           <TextField
             type="date"
@@ -247,7 +269,10 @@ export default function EquipmentForm({
             type="date"
             label="Expire Date DCP"
             value={expiryDate(values.refill_date_dcp)}
-            slotProps={{ input: { readOnly: true }, inputLabel: { shrink: true } }}
+            slotProps={{
+              input: { readOnly: true },
+              inputLabel: { shrink: true },
+            }}
           />
         </>
       )}

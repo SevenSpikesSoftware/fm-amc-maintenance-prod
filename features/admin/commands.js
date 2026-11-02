@@ -128,17 +128,15 @@ export async function createAdminEquipment(input) {
     .eq("id", locationId)
     .single();
   if (locationError) throw locationError;
-  const { error } = await supabase
-    .from("equipment")
-    .insert({
-      ...values,
-      asset_id: equipmentAssetId(
-        location.site_code,
-        values.equipment_type_code,
-        values.unit_number,
-      ),
-      location_id: locationId,
-    });
+  const { error } = await supabase.from("equipment").insert({
+    ...values,
+    asset_id: equipmentAssetId(
+      location.site_code,
+      values.equipment_type_code,
+      values.unit_number,
+    ),
+    location_id: locationId,
+  });
   if (error) throw error;
   revalidatePath("/equipment");
 }
@@ -213,9 +211,10 @@ export async function deleteLocation(id) {
   const { error } = await supabase.from("locations").delete().eq("id", id);
   if (error) {
     return {
-      error: error.code === "23503"
-        ? "This location cannot be deleted because it is linked to assets or movement history."
-        : "Could not delete this location. Please try again.",
+      error:
+        error.code === "23503"
+          ? "This location cannot be deleted because it is linked to assets or movement history."
+          : "Could not delete this location. Please try again.",
     };
   }
   revalidatePath("/locations");
@@ -273,6 +272,7 @@ export async function createStatusValue(input) {
     code: required(input.code, "Code").toUpperCase(),
     label: required(input.label, "Label"),
     sort_order: Number(input.sort_order) || 0,
+    parent_id: input.parent_id || null,
   });
   if (error) throw error;
   revalidatePath("/configuration");
@@ -288,6 +288,7 @@ export async function updateStatusValue(input) {
       label: required(input.label, "Label"),
       sort_order: Number(input.sort_order) || 0,
       is_active: input.is_active !== false,
+      parent_id: input.parent_id || null,
     })
     .eq("id", input.id);
   if (error) throw error;

@@ -17,10 +17,26 @@ import DeleteConfirmationButton from "../DeleteConfirmationButton";
 export default async function StatusesPage() {
   const { data, error } = await (await createClient())
     .from("status_values")
-    .select("id, code, label, sort_order, is_active")
+    .select("id, code, label, sort_order, is_active, parent_id")
     .order("sort_order")
     .order("label");
   if (error) throw error;
+
+  const byParent = new Map();
+  for (const item of data) {
+    const key = item.parent_id ?? "null";
+    if (!byParent.has(key)) byParent.set(key, []);
+    byParent.get(key).push(item);
+  }
+
+  const orderedRows = [];
+  for (const topLevel of byParent.get("null") ?? []) {
+    orderedRows.push({ ...topLevel, depth: 0 });
+    for (const child of byParent.get(topLevel.id) ?? []) {
+      orderedRows.push({ ...child, depth: 1 });
+    }
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Stack direction="row" sx={{ mb: 3, justifyContent: "space-between" }}>
@@ -41,10 +57,13 @@ export default async function StatusesPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {data.map((item) => (
+            {orderedRows.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.code}</TableCell>
-                <TableCell>{item.label}</TableCell>
+                <TableCell sx={{ pl: item.depth * 4 }}>
+                  {item.depth > 0 ? `└ ${item.label}` : item.label}
+                </TableCell>
+
                 <TableCell>{item.sort_order}</TableCell>
                 <TableCell>{item.is_active ? "Yes" : "No"}</TableCell>
                 <TableCell>

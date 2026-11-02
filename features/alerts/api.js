@@ -1,3 +1,4 @@
+import { isNotOperational } from "@/lib/equipmentStatus";
 function equipmentLabel(item) {
   return item.asset_id ?? `${item.equipment_type_code}/${item.unit_number}`;
 }
@@ -13,9 +14,9 @@ function locationLabel(location) {
 
 export async function getInspectionAlerts(supabase) {
   const equipmentSelect =
-    "id, asset_id, equipment_type, equipment_type_code, unit_number, name, amc_frequency, created_at, next_amc_date, is_submitted_by_tech, locations(site_code, site_name, room_area)";
+    "id, asset_id, equipment_type, equipment_type_code, unit_number, name, amc_frequency, created_at, next_amc_date, is_submitted_by_tech, status, locations(site_code, site_name, room_area)";
   const legacyEquipmentSelect =
-    "id, asset_id, equipment_type, equipment_type_code, unit_number, name, amc_frequency, created_at, next_amc_date, locations(site_code, site_name, room_area)";
+    "id, asset_id, equipment_type, equipment_type_code, unit_number, name, amc_frequency, created_at, next_amc_date, status, locations(site_code, site_name, room_area)";
   let [
     { data: equipment, error: equipmentError },
     { data: submissions, error: submissionError },
@@ -43,7 +44,9 @@ export async function getInspectionAlerts(supabase) {
 
   if (equipmentError) throw equipmentError;
   if (submissionError) throw submissionError;
-
+  const operationalEquipment = (equipment ?? []).filter(
+    (item) => !isNotOperational(item.status),
+  );
   const latestByEquipment = new Map();
   for (const submission of submissions ?? []) {
     if (!latestByEquipment.has(submission.equipment_id)) {
@@ -55,7 +58,7 @@ export async function getInspectionAlerts(supabase) {
   const today = now.toISOString().slice(0, 10);
   const newAssetCutoff = new Date(now);
   newAssetCutoff.setDate(newAssetCutoff.getDate() - 30);
-  const scheduleAlerts = (equipment ?? [])
+  const scheduleAlerts = (operationalEquipment ?? [])
     .map((item) => {
       const latest = latestByEquipment.get(item.id) ?? null;
       if (!item.next_amc_date) return null;
@@ -74,7 +77,7 @@ export async function getInspectionAlerts(supabase) {
       };
     })
     .filter(Boolean);
-  const newAssets = (equipment ?? [])
+  const newAssets = (operationalEquipment ?? [])
     .filter(
       (item) =>
         item.is_submitted_by_tech === true &&
@@ -88,7 +91,7 @@ export async function getInspectionAlerts(supabase) {
       alertStatus: "new_asset",
     }));
 
-  const cancelledAlerts = (equipment ?? [])
+  const cancelledAlerts = (operationalEquipment ?? [])
     .map((item) => {
       const latest = latestByEquipment.get(item.id) ?? null;
       if (!latest || latest.form_status !== "cancelled") return null;
