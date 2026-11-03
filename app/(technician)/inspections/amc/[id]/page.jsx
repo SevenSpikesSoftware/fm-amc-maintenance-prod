@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Container, Alert, Button } from "@mui/material";
+import { Container, Alert, Button, Typography } from "@mui/material";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth";
 import {
@@ -10,6 +10,7 @@ import {
 import ChecklistForm from "@/features/forms/components/ChecklistForm";
 import SubmissionViewer from "@/features/forms/components/SubmissionViewer";
 import BackButton from "./BackButton";
+import { isNotOperational } from "@/lib/equipmentStatus";
 
 export default async function InspectionFormPage({ params }) {
   const { id } = await params;
@@ -28,19 +29,50 @@ export default async function InspectionFormPage({ params }) {
   const { data: equipment, error: equipmentError } = await supabase
     .from("equipment")
     .select(
-      "id, equipment_type_code, equipment_type,equipment_type_id, unit_number, name, next_amc_date, locations ( site_code, room_area )",
+      "id, equipment_type_code, equipment_type,equipment_type_id, unit_number, name, status,next_amc_date, locations ( site_code, room_area )",
     )
     .eq("id", id)
     .single();
 
   if (equipmentError || !equipment) notFound();
-
+  const equipmentIsNotOperational = isNotOperational(equipment.status);
   // checks if the latest submission is still valid based on the next_amc_date of the equipment
   const today = new Date().toISOString().slice(0, 10);
-  const isStillSubmitted = equipment.next_amc_date
-    ? equipment.next_amc_date > today
-    : Boolean(latestSubmission);
+  // const isStillSubmitted = equipment.next_amc_date
+  //   ? equipment.next_amc_date > today
+  //   : Boolean(latestSubmission);
 
+  const isStillSubmitted = equipmentIsNotOperational
+    ? Boolean(latestSubmission)
+    : equipment.next_amc_date
+      ? equipment.next_amc_date > today
+      : Boolean(latestSubmission);
+  if (equipmentIsNotOperational && !latestSubmission) {
+    const { data: latestAnySubmission } = await supabase
+      .from("form_submissions")
+      .select("form_status,submitted_at, cancellation_reason")
+      .eq("equipment_id", id)
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return (
+      <Container maxWidth="sm" sx={{ py: 4 }}>
+        <Alert severity="error" sx={{ mt: 2 }}>
+          This asset is marked as &quot;{equipment.status}&quot; and is not
+          available for inspection.
+        </Alert>
+        {latestAnySubmission?.form_status === "cancelled" && (
+          <Typography sx={{ mt: 2 }}>
+            Last inspection was cancelled on{" "}
+            {latestAnySubmission.submitted_at?.slice(0, 10)}
+            <br />
+            Reason: {latestAnySubmission.cancellation_reason}
+          </Typography>
+        )}
+      </Container>
+    );
+  }
   if (latestSubmission && isStillSubmitted) {
     const submission = await getSubmissionWithResponses(
       supabase,

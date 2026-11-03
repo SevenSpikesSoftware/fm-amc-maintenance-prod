@@ -151,7 +151,8 @@ export default function EquipmentList({
     return !completedIds.has(item.id);
   });
   const submittedEquipment = filteredEquipment.filter((item) => {
-    if (isNotOperational(item.status)) return completedIds.has(item.id);
+    if (isNotOperational(item.status))
+      return completedIds.has(item.id) || cancelledDates.has(item.id);
     if (item.next_amc_date)
       return item.next_amc_date > today && completedIds.has(item.id);
     return completedIds.has(item.id);
