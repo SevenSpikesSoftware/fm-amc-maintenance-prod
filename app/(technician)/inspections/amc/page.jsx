@@ -1,4 +1,11 @@
-import { Container, Typography, Stack, Button, Divider } from "@mui/material";
+import {
+  Container,
+  Typography,
+  Stack,
+  Button,
+  Divider,
+  Badge,
+} from "@mui/material";
 import { createClient } from "@/lib/supabase/server";
 import EquipmentList from "./EquipmentList";
 import LogoutButton from "@/features/auth/components/LogoutButton";
@@ -13,11 +20,12 @@ export default async function InspectionsPage() {
     { data: equipmentTypes, error: typesError },
     { data: submissions, error: submissionError },
     { data: locations, error: locationsError },
+    { count: pendingMaintenanceCount },
   ] = await Promise.all([
     supabase
       .from("equipment")
       .select(
-        "id, equipment_type_id, equipment_type_code, equipment_type, unit_number, name, status,next_amc_date, locations (site_code, room_area)",
+        "id, equipment_type_id, equipment_type_code, equipment_type, unit_number, name, status,next_amc_date, locations (site_code,site_name, room_area)",
       )
       .order("unit_number", { ascending: true }),
     supabase.from("equipment_types").select("id, code ,name").order("name"),
@@ -29,6 +37,10 @@ export default async function InspectionsPage() {
       .from("locations")
       .select("id,site_code,site_name")
       .order("site_code"),
+    supabase
+      .from("maintenance_issues")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open"),
   ]);
   // const operationalEquipment = (equipment ?? []).filter(
   //   (item) => !isNotOperational(item.status),
@@ -96,9 +108,15 @@ export default async function InspectionsPage() {
           href="/inspections/maintenance"
           style={{ textDecoration: "none" }}
         >
-          <Button variant="contained" sx={{ mb: 3 }}>
-            Maintenance
-          </Button>
+          <Badge
+            badgeContent={pendingMaintenanceCount}
+            invisible={!pendingMaintenanceCount}
+            color="error"
+          >
+            <Button variant="contained" sx={{ mb: 3 }}>
+              Maintenance
+            </Button>
+          </Badge>
         </Link>
       </Stack>
       <Divider sx={{ mb: 3 }} />

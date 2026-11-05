@@ -1,8 +1,15 @@
 import LogoutButton from "@/features/auth/components/LogoutButton";
-import { Container, Grid, Paper, Typography } from "@mui/material";
+import { Container, Grid, Paper, Typography, Badge } from "@mui/material";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+export default async function InspectionsHomePage() {
+  const supabase = await createClient();
 
-export default function InspectionsHomePage() {
+  const { count } = await supabase
+    .from("maintenance_issues")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "open");
+
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Typography variant="h5" sx={{ mb: 4, textAlign: "center" }}>
@@ -24,9 +31,19 @@ export default function InspectionsHomePage() {
             href="/inspections/maintenance"
             style={{ textDecoration: "none", color: "inherit" }}
           >
-            <Paper variant="outlined" sx={{ p: 3, textAlign: "center" }}>
-              Maintenance
-            </Paper>
+            <Badge
+              badgeContent={count}
+              invisible={!count}
+              color="error"
+              sx={{ width: "100%" }}
+            >
+              <Paper
+                variant="outlined"
+                sx={{ p: 3, textAlign: "center", width: "100%" }}
+              >
+                Maintenance
+              </Paper>
+            </Badge>
           </Link>
         </Grid>
         <Grid size={12} sx={{ mt: 4, textAlign: "center" }}>
