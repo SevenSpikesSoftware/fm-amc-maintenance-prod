@@ -43,6 +43,7 @@ export default function ChecklistForm({
   const [signature, setSignature] = useState(null);
   const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   // for cancelled inspection dialog
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -104,8 +105,11 @@ export default function ChecklistForm({
     }
 
     setError(null);
-    setSubmitting(true);
+    setSubmitConfirmOpen(true);
+  }
 
+  async function confirmSubmit() {
+    setSubmitting(true);
     try {
       const supabase = createClient();
       const responses = template.fields.map((field) => {
@@ -141,6 +145,7 @@ export default function ChecklistForm({
     } catch (submitError) {
       setError(submitError.message ?? "Failed to submit inspection.");
       setSubmitting(false);
+      setSubmitConfirmOpen(false);
     }
   }
 
@@ -297,6 +302,30 @@ export default function ChecklistForm({
             variant="contained"
             disabled={cancelSubmitting}
             onClick={handleCancel}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={submitConfirmOpen}
+        onClose={() => setSubmitConfirmOpen(false)}
+      >
+        <DialogTitle>Submit Inspection?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to submit this inspection?
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSubmitConfirmOpen(false)}>Close</Button>
+          <Button
+            variant="contained"
+            disabled={submitting}
+            onClick={confirmSubmit}
           >
             Confirm
           </Button>
