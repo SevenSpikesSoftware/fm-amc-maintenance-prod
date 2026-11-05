@@ -162,7 +162,7 @@ export default function QuickAddForm({ equipmentTypes, sites }) {
         >
           {sites.map((site) => (
             <MenuItem key={site.site_code} value={site.site_code}>
-              {site.site_code}
+              {site.site_name}
             </MenuItem>
           ))}
         </TextField>

@@ -21,7 +21,7 @@ export default async function MaintenancePage() {
     .from("maintenance_issues")
     .select(
       ` id, status, opened_at,
-      equipment ( id, name, equipment_type, equipment_type_code, unit_number, locations ( site_code, room_area ) ),
+      equipment ( id, name, equipment_type, equipment_type_code, unit_number, locations ( site_code,site_name, room_area ) ),
       form_responses ( remarks, form_fields ( label ) )`,
     )
     .eq("status", "open")

@@ -16,7 +16,7 @@ export default async function QuickAddEquipmentPage() {
       .order("name"),
     supabase
       .from("locations")
-      .select("id,site_code,room_area")
+      .select("id,site_code,site_name,room_area")
       .order("site_code"),
   ]);
 

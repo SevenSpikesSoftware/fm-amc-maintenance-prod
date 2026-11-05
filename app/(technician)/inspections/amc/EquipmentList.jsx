@@ -197,7 +197,7 @@ export default function EquipmentList({
             <MenuItem value="">All Locations</MenuItem>
             {locations.map((loc) => (
               <MenuItem key={loc.site_code} value={loc.site_code}>
-                {loc.site_code}
+                {loc.site_name}
               </MenuItem>
             ))}
           </TextField>

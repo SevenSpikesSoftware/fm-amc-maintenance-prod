@@ -21,13 +21,14 @@ export default function MaintenanceList({ groups }) {
   const [selectedLocationId, setSelectedLocationId] = useState("");
 
   const siteOptions = useMemo(() => {
-    const uniqueSites = new Set();
+    const uniqueSites = new Map();
     for (const { equipment } of groups) {
-      if (equipment.locations?.site_code) {
-        uniqueSites.add(equipment.locations.site_code);
+      const loc = equipment.locations;
+      if (loc?.site_code && !uniqueSites.has(loc.site_code)) {
+        uniqueSites.set(loc.site_code, loc.site_name ?? loc.site_code);
       }
     }
-    return Array.from(uniqueSites).sort();
+    return Array.from(uniqueSites, ([code, name]) => ({ code, name }));
   }, [groups]);
 
   const filteredGroups = useMemo(() => {
@@ -77,8 +78,8 @@ export default function MaintenanceList({ groups }) {
           >
             <MenuItem value="">All Locations</MenuItem>
             {siteOptions.map((site) => (
-              <MenuItem key={site} value={site}>
-                {site}
+              <MenuItem key={site.code} value={site.code}>
+                {site.name}
               </MenuItem>
             ))}
           </TextField>
