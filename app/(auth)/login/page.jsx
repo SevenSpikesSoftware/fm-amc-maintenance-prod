@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 import {
   Button,
   TextField,
@@ -61,15 +62,25 @@ export default function LoginPage() {
       onSubmit={handleLogin}
       sx={{
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
+        gap: 3,
       }}
     >
+      <Image
+        src="/seven-spikes-group-logo-centered.png"
+        alt="Seven Spikes"
+        width={1186}
+        height={1064}
+        style={{ height: 220, width: "auto" }}
+        priority
+      />
       <Card sx={{ width: 400 }}>
         <CardContent>
           <Typography variant="h5" sx={{ mb: 2 }}>
-            FM AMC Maintenance
+            FM AMC & Maintenance
           </Typography>
           {error && (
             <Typography color="error" sx={{ mb: 1 }}>
