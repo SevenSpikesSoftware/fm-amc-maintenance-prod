@@ -30,7 +30,7 @@ export async function getInspectionReportData(supabase) {
     supabase
       .from("maintenance_issues")
       .select(
-        "id, equipment_id, status, opened_at, resolved_at, resolved_by, resolution_comment, form_responses(remarks, form_fields(label))",
+        "id, equipment_id, status, opened_at, resolved_at, resolved_by, resolution_comment, cost, form_responses(remarks, form_fields(label))",
       )
       .order("opened_at", { ascending: false }),
   ]);

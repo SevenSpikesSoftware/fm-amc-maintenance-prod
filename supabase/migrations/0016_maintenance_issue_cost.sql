@@ -1,0 +1,1 @@
+alter table maintenance_issues add column cost numeric;

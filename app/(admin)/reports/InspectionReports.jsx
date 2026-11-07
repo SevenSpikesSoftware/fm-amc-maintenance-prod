@@ -26,6 +26,8 @@ import { exportCsv } from "./reportUtils";
 import { printReport } from "./reportPrint";
 import ReportHeader, { formatReportPeriod } from "./ReportHeader";
 import SummaryReport from "./SummaryReport";
+import { createClient } from "@/lib/supabase/client";
+import { updateMaintenanceIssueCost } from "@/features/forms/api";
 
 function equipmentLabel(item) {
   return item.asset_id ?? `${item.equipment_type_code}/${item.unit_number}`;
@@ -105,7 +107,11 @@ function InspectionHistoryDialog({ equipment }) {
 
 function MaintenanceHistoryDialog({ equipment }) {
   const [open, setOpen] = useState(false);
+  const [saveErrors, setSaveErrors] = useState({});
   const history = equipment.maintenanceHistory ?? [];
+  const [costs, setCosts] = useState(() =>
+    Object.fromEntries(history.map((issue) => [issue.id, issue.cost ?? ""])),
+  );
   return (
     <>
       <Button
@@ -133,6 +139,7 @@ function MaintenanceHistoryDialog({ equipment }) {
                 <TableCell>Issue</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Resolution Comment</TableCell>
+                <TableCell>Cost (AED)</TableCell>
                 <TableCell>Resolved</TableCell>
               </TableRow>
             </TableHead>
@@ -152,6 +159,48 @@ function MaintenanceHistoryDialog({ equipment }) {
                     />
                   </TableCell>
                   <TableCell>{issue.resolution_comment ?? "-"}</TableCell>
+
+                  <TableCell>
+                    {issue.status === "resolved" ? (
+                      <TextField
+                        size="small"
+                        type="number"
+                        value={costs[issue.id] ?? ""}
+                        onChange={(e) =>
+                          setCosts((prev) => ({
+                            ...prev,
+                            [issue.id]: e.target.value,
+                          }))
+                        }
+                        onBlur={async () => {
+                          const supabase = createClient();
+                          try {
+                            await updateMaintenanceIssueCost(
+                              supabase,
+                              issue.id,
+                              costs[issue.id] === ""
+                                ? null
+                                : Number(costs[issue.id]),
+                            );
+                            setSaveErrors((prev) => ({
+                              ...prev,
+                              [issue.id]: null,
+                            }));
+                          } catch (err) {
+                            setSaveErrors((prev) => ({
+                              ...prev,
+                              [issue.id]: err.message ?? "Failed to save cost",
+                            }));
+                          }
+                        }}
+                        sx={{ width: 100 }}
+                        error={Boolean(saveErrors[issue.id])}
+                        helperText={saveErrors[issue.id] ?? undefined}
+                      />
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>
                     {issue.status === "resolved"
                       ? `${issue.resolved_at?.slice(0, 10) ?? "-"} by ${issue.resolverName ?? "-"}`
@@ -290,7 +339,9 @@ export default function InspectionReports({ reportData }) {
   const [toDate, setToDate] = useState("");
   const [summaryLocation, setSummaryLocation] = useState("all");
   const [summaryAssetType, setSummaryAssetType] = useState("All asset types");
-  const [summaryMetric, setSummaryMetric] = useState("All Completed Inspections");
+  const [summaryMetric, setSummaryMetric] = useState(
+    "All Completed Inspections",
+  );
   const [summaryPeriod, setSummaryPeriod] = useState(
     formatReportPeriod(
       reportData.completed.map((submission) => submission.inspection_date),

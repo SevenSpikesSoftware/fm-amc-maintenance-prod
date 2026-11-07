@@ -324,6 +324,22 @@ export async function resolveMaintenanceIssue(
 
   if (error) throw error;
 }
+/**
+ * Records the cost of a resolved maintenance issue.
+ * @param {import('@supabase/supabase-js').SupabaseClient} supabase
+ * @param {string} issueId
+ * @param {number} cost
+ * @returns {Promise<void>}
+ */
+
+export async function updateMaintenanceIssueCost(supabase, issueId, cost) {
+  const { error } = await supabase
+    .from("maintenance_issues")
+    .update({ cost })
+    .eq("id", issueId);
+
+  if (error) throw error;
+}
 
 export async function cancelInspection(
   supabase,
