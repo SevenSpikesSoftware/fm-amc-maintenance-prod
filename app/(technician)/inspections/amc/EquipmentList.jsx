@@ -61,7 +61,11 @@ function renderEquipmentList(items, chipLabel, cancelledDates) {
                 secondary={`${assetId}· ${item.locations?.room_area ? `Room ${item.locations.room_area}` : ""}`}
               />
               <Stack spacing={1}>
-                <Chip label={chipLabel} size="small" color="primary" />
+                <Chip
+                  label={chipLabel}
+                  size="small"
+                  color={chipLabel === "Inspect" ? "secondary" : "success"}
+                />
                 {cancelledDates.has(item.id) && (
                   <Chip
                     label={`Cancelled - ${new Date(cancelledDates.get(item.id)).toLocaleDateString()}`}

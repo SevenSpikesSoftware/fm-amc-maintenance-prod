@@ -100,7 +100,7 @@ export default async function InspectionsPage() {
         sx={{ justifyContent: "space-between", alignItems: "flex-start" }}
       >
         <Link href="/inspections/amc/new" style={{ textDecoration: "none" }}>
-          <Button variant="outlined" sx={{ mb: 3 }}>
+          <Button variant="contained" color="secondary" sx={{ mb: 3 }}>
             Asset not listed? Add it here
           </Button>
         </Link>
